@@ -353,7 +353,7 @@ def render_scores(scores: dict):
 
 # ── Main App ──────────────────────────────────────────────────────────────────
 def main():
-    st.title("🩺 AURA-ED")
+    st.title("AURA-ED")
     st.caption("AI-powered Utilization & Risk Analysis in the Emergency Department")
 
     # ── Sidebar ───────────────────────────────────────────────────────────────
@@ -481,12 +481,12 @@ def main():
     # Outcomes (ground truth — hidden by default)
     with st.expander("Documented Outcomes (Ground Truth)"):
         if summary["outcomes"]:
-            st.error("⚠️ Confirmed outcomes: " + ", ".join(summary["outcomes"].keys()))
+            st.error("Confirmed outcomes: " + ", ".join(summary["outcomes"].keys()))
         else:
             st.success("No adverse outcomes documented for this visit.")
 
     # ── Brief Generation ──────────────────────────────────────────────────────
-    st.markdown("### 📋 Early Risk Profile")
+    st.markdown("### Early Risk Profile")
 
     if not active_model.strip():
         st.warning("Select a model in the sidebar to generate a brief.")
@@ -512,7 +512,7 @@ def main():
         brief_display = re.sub(r"^─+.*\n?", "", brief_display, flags=re.MULTILINE)
         st.markdown(brief_display)
         st.download_button(
-            label="⬇ Download Brief (Markdown)",
+            label="Download Brief (Markdown)",
             data=st.session_state["last_brief"],
             file_name=f"AURA_stay_{selected_row['stay_id']}.md",
             mime="text/markdown",
