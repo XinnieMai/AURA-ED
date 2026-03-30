@@ -5,3 +5,4 @@ streamlit
 ollama
 python-dotenv
 google-genai
+sklearn

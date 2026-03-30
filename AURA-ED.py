@@ -8,18 +8,12 @@ import sys
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
+import config
+from config import ollama_client, gemini_client, OLLAMA_MODEL, GEMINI_MODEL
 import ollama
-from google import genai
 
 load_dotenv()
 
-# Configure Ollama client with host from .env (falls back to localhost default)
-_OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-_ollama_client = ollama.Client(host=_OLLAMA_HOST)
-
-# Configure Gemini client
-_GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-_gemini_client = genai.Client(api_key=_GEMINI_API_KEY) if _GEMINI_API_KEY else None
 
 sys.path.insert(0, os.path.dirname(__file__))
 from guardrails.ClinicalReviewGuardrail import clinicalReviewGuardrail
@@ -32,7 +26,7 @@ st.set_page_config(
     layout="wide",
 )
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), "master_dataset.csv")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "dataset/master_dataset.csv")
 
 VITAL_REFS = {
     "triage_temperature":  ("Temperature (°C)",   35.0,  38.5),
@@ -256,10 +250,10 @@ Tone: clinical, precise, direct. No unnecessary hedging. Assume the reader is a 
 def generate_brief(summary: dict, provider: str, model: str) -> str:
     prompt = build_prompt(summary)
     if provider == "Gemini":
-        response = _gemini_client.models.generate_content(model=model, contents=prompt)
+        response = gemini_client.models.generate_content(model=model, contents=prompt)
         return response.text
     else:
-        response = _ollama_client.chat(
+        response = ollama_client.chat(
             model=model,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -371,7 +365,7 @@ def main():
             if st.button("Pull Model", use_container_width=True):
                 with st.spinner(f"Pulling {active_model}… this may take a few minutes."):
                     try:
-                        _ollama_client.pull(active_model.strip())
+                        ollama_client.pull(active_model.strip())
                         st.success(f"'{active_model}' pulled successfully.")
                     except Exception as e:
                         st.error(f"Pull failed: {e}")
@@ -382,7 +376,7 @@ def main():
                     "gemini-3-flash-preview",
                 ],
             )
-            if not _GEMINI_API_KEY:
+            if not config.GEMINI_API_KEY:
                 st.warning("GEMINI_API_KEY not set in .env")
         st.divider()
         st.header("Patient Selection")

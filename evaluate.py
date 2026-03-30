@@ -74,7 +74,7 @@ def compute_metrics(y_true, y_score_cont, threshold: float) -> dict:
 
 
 def print_table(title: str, rows: list[dict], columns: list[str]):
-    col_w = max(len(c) for c in columns)
+    col_w = max(max(len(c) for c in columns), 6)  # 6 = len("0.1234")
     row_w = max(len(r["label"]) for r in rows)
     header = f"{'':>{row_w}}  " + "  ".join(f"{c:>{col_w}}" for c in columns)
     print(f"\n{'─'*len(header)}")
@@ -144,18 +144,6 @@ def parse_risk_tier(brief: str) -> str | None:
 TIER_SCORE = {"LOW": 0, "MODERATE": 1, "HIGH": 2, "CRITICAL": 3}
 
 
-def generate_brief_llm(summary: dict, provider: str, model: str,
-                        ollama_client=None, gemini_client=None) -> str:
-    from AURA_ED_eval_helpers import build_prompt  
-    prompt = build_prompt(summary)
-    if provider == "gemini":
-        resp = gemini_client.models.generate_content(model=model, contents=prompt)
-        return resp.text
-    else:
-        resp = ollama_client.chat(model=model, messages=[{"role": "user", "content": prompt}])
-        return resp.message.content
-
-
 def eval_llm(df: pd.DataFrame, provider: str, model: str, n: int, split_name: str):
     """Run the LLM on n test patients and compute metrics from parsed risk tiers."""
     from dotenv import load_dotenv
@@ -201,6 +189,7 @@ def eval_llm(df: pd.DataFrame, provider: str, model: str, n: int, split_name: st
     for i, (_, row) in enumerate(sample.iterrows()):
         try:
             summary = extract_patient_summary(row)
+            summary["outcomes"] = {}  # blind eval — strip ground truth before prompt
             prompt  = build_prompt(summary)
             brief   = call_llm(prompt)
             tier    = parse_risk_tier(brief)
@@ -213,14 +202,11 @@ def eval_llm(df: pd.DataFrame, provider: str, model: str, n: int, split_name: st
                     true_labels[o].append(0)
             if (i + 1) % 10 == 0:
                 print(f"  {i+1}/{len(sample)} completed …")
-        except Exception as e:
-            tiers.append(np.nan)
-            for o in PRIMARY_OUTCOMES:
-                true_labels[o].append(0)
-            errors += 1
+        except Exception:
+            errors += 1  # skip row entirely — don't append fabricated ground truth
 
     if errors:
-        print(f"  [{errors} errors during generation]")
+        print(f"  [{errors}/{len(sample)} rows skipped due to errors — excluded from metrics]")
 
     y_score = np.array(tiers, dtype=float)
     rows = []
@@ -228,7 +214,7 @@ def eval_llm(df: pd.DataFrame, provider: str, model: str, n: int, split_name: st
         if outcome not in df.columns:
             continue
         y_true = np.array(true_labels[outcome])
-        m = compute_metrics(y_true, y_score, threshold=2.0)  # when ≥2 = it would be consideredHIGH/CRITICAL
+        m = compute_metrics(y_true, y_score, threshold=2.0)  # ≥2 = HIGH/CRITICAL
         rows.append({
             "label":      outcome.replace("outcome_", ""),
             "n":          str(m["n"]),
