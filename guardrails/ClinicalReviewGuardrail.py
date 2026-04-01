@@ -10,13 +10,37 @@ class clinicalReviewGuardrail:
             "fair": 0
         }
         
+    # Score thresholds: (high_threshold, critical_threshold)
+    SCORE_THRESHOLDS = {
+        'NEWS':  (5, 7),
+        'NEWS2': (5, 7),
+        'MEWS':  (3, 5),
+        'REMS':  (8, 12),
+        'CART':  (5, 9),
+    }
+
+    def _derive_tier_from_scores(self, truth: dict) -> str | None:
+        """Derive expected risk tier from the best available clinical score."""
+        for score_name, (high_thresh, critical_thresh) in self.SCORE_THRESHOLDS.items():
+            val = truth.get(score_name)
+            if val is None:
+                continue
+            if val >= critical_thresh:
+                return 'CRITICAL'
+            if val >= high_thresh:
+                return 'HIGH'
+            return 'MODERATE' if val >= (high_thresh // 2) else 'LOW'
+        return None
+
     def auto_score(self, AURA, truth):
         """Automatically score before human review.
 
         Args:
             AURA: The generated AURA brief text.
-            truth: Dict of patient ground-truth values. Expected keys:
-                   'HR' (int/float), 'MEWS' (int/float), 'risk_tier' (str: 'HIGH'/'MODERATE'/'LOW').
+            truth: Dict of patient ground-truth values. May include any of:
+                   'HR', 'RR', 'Temp', 'SBP', 'SpO2' (vitals),
+                   'NEWS', 'NEWS2', 'MEWS', 'REMS', 'CART' (scores),
+                   'risk_tier' (str: 'HIGH'/'MODERATE'/'LOW'/'CRITICAL').
         """
         scores = {}
 
@@ -28,16 +52,8 @@ class clinicalReviewGuardrail:
         else:
             scores['factual_accuracy'] = 0.5  # can't verify without vitals
 
-        # Risk Tier Justification — MEWS thresholds: >=5 HIGH, 3-4 MODERATE, <3 LOW
-        mews = truth.get('MEWS')
-        expected_tier = truth.get('risk_tier')
-        if mews is not None:
-            if mews >= 5:
-                expected_tier = expected_tier or 'HIGH'
-            elif mews >= 3:
-                expected_tier = expected_tier or 'MODERATE'
-            else:
-                expected_tier = expected_tier or 'LOW'
+        # Risk Tier Justification — use best available score, fall back to explicit tier
+        expected_tier = truth.get('risk_tier') or self._derive_tier_from_scores(truth)
 
         if expected_tier and expected_tier.upper() in AURA.upper():
             scores['risk_tier_justified'] = 1.0

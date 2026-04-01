@@ -225,11 +225,24 @@ UTILIZATION HISTORY
 DOCUMENTED OUTCOMES (Ground-truth, for context)
 {outcomes_text}
 
+SCORE INTERPRETATION GUIDE
+Use these validated thresholds when assigning the risk tier:
+  • MEWS  ≥ 5 → CRITICAL  |  3–4 → HIGH  |  1–2 → MODERATE  |  0 → LOW
+  • NEWS  ≥ 7 → CRITICAL  |  5–6 → HIGH  |  1–4 → MODERATE  |  0 → LOW
+  • NEWS2 ≥ 7 → CRITICAL  |  5–6 → HIGH  |  1–4 → MODERATE  |  0 → LOW
+  • REMS  ≥ 12 → CRITICAL  |  8–11 → HIGH  |  <8 → MODERATE/LOW
+  • CART  ≥ 9 → CRITICAL  |  5–8 → HIGH  |  <5 → MODERATE/LOW
+  • CCI   ≥ 4 → very high comorbidity burden (elevates tier by one level)
+  Sepsis flag (qSOFA ≥ 2): RR ≥ 22  OR  SBP ≤ 100  OR  altered mentation — any two present with suspected infection → escalate to HIGH minimum.
+  Lactate > 2 mmol/L with suspected infection → sepsis concern, escalate tier.
+
 TASK
-Generate a concise, executive-level "Early Risk Profile" brief. Structure your output EXACTLY as follows:
+Step 1 — REASON: Silently evaluate each score against the thresholds above and note which vitals or labs are abnormal. Consider whether qSOFA or sepsis criteria are met.
+Step 2 — ASSIGN: Based on that reasoning, select ONE overall tier: LOW / MODERATE / HIGH / CRITICAL. Use the highest tier justified by any single score or clinical flag.
+Step 3 — WRITE: Generate the brief using the structure below.
 
 ## Overall Risk Assessment
-One-line summary: assign a risk tier (LOW / MODERATE / HIGH / CRITICAL) and a single-sentence rationale.
+One-line summary: state the assigned tier (LOW / MODERATE / HIGH / CRITICAL) and a single-sentence rationale citing the primary driver.
 
 ## Key Drivers of Concern
 Bullet list of the 3–6 most clinically significant findings, ranked by importance. Each bullet should state the finding AND its clinical implication. Be specific — cite actual values.

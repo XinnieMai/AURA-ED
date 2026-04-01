@@ -186,13 +186,22 @@ def eval_llm(df: pd.DataFrame, provider: str, model: str, n: int, split_name: st
     tiers, true_labels = [], {o: [] for o in PRIMARY_OUTCOMES}
     errors = 0
 
+    MAX_RETRIES = 2
+
     for i, (_, row) in enumerate(sample.iterrows()):
         try:
             summary = extract_patient_summary(row)
             summary["outcomes"] = {}  # blind eval — strip ground truth before prompt
             prompt  = build_prompt(summary)
-            brief   = call_llm(prompt)
-            tier    = parse_risk_tier(brief)
+
+            brief = None
+            for _ in range(MAX_RETRIES + 1):
+                brief = call_llm(prompt)
+                tier_check = parse_risk_tier(brief)
+                if tier_check is not None:
+                    break  # valid tier found — accept this brief
+
+            tier = parse_risk_tier(brief)
             tiers.append(TIER_SCORE.get(tier, np.nan) if tier else np.nan)
             for o in PRIMARY_OUTCOMES:
                 if o in row:
