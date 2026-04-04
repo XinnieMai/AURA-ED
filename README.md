@@ -43,5 +43,31 @@ python extract_master_dataset.py
 - Composition: A total of **216** variables are included in `master_dataset.csv`
 - Protocol: 80/20 train-test split.
 
+# Inference Pipeline
+To generate the Clinical Risk Briefs, the system utilizes a Retrieval-Augmented Generation (RAG) architecture.
+- Employs a zero-shot chain-of-thought prompting strategy to force the model to weigh acute physiological instability against chronic disease burden.
+- The engine integrates triage vitals, high-priority labs (Lactate, Troponin), and validated risk scores (NEWS2, CCI, ECI) into a constrained output schema.
+
+~~~
+python brief_generator_llama.py --input master_dataset.csv --model llama3.1:8b
+~~~
+
+# Model Performance
+The models were evaluated across eight clinical outcomes using AUROC to account for extreme class imbalance in ED data.
+
+# Limitations
+Pilot Sample Size: While the initial plan involved the full 80/20 split, computational constraints (8-hour run times for 300 patients) limited the pilot evaluation to a representative sample of 300 ED encounters.
+
+HIPAA Compliance: To protect patient privacy, all names are omitted; users must search via SubjectID.
+
+Model Blind Spots: No AI should operate without physician oversight. For example, llama3.1:8b showed sub-chance performance for Acute Kidney Injury (AKI), indicating where human adjudication is irreplaceable.
+
+# Future Work
+Infrastructure: Migrating from local inference to a Virtual Private Server (VPS) or Cloud environment (e.g., AWS Bedrock) to achieve sub-second inference speeds.
+
+Integration: Transitioning from a Streamlit prototype to a secure, FHIR-compliant hospital plugin.
+
+Equity: Implementing real-time auditing for Algorithmic Equity to ensure consistent risk narratives across diverse demographics.
+
 # References
 
