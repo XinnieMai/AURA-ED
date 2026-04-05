@@ -1,3 +1,9 @@
+---
+noteId: "706af040312a11f1bcd96f93fa44bc36"
+tags: []
+
+---
+
 # AURA-ED: AI-powered Utilization & Risk Analysis in the Emergency Department
 
 **Course: DS 5003: Healthcare Data Science**
@@ -52,8 +58,96 @@ To generate the Clinical Risk Briefs, the system utilizes a Retrieval-Augmented 
 python brief_generator_llama.py --input master_dataset.csv --model llama3.1:8b
 ~~~
 
-# Model Performance
-The models were evaluated across eight clinical outcomes using AUROC to account for extreme class imbalance in ED data.
+# Running the App
+
+## Prerequisites
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Ollama must be running locally with at least one model pulled:
+```bash
+ollama serve
+ollama pull gemma3:12b   # or any supported model
+```
+
+## Environment Variables
+
+Create a `.env` file in the project root (optional — defaults shown):
+
+| Variable | Default | Description |
+|---|---|---|
+| `OLLAMA_HOST` | `http://localhost:11434` | Ollama server URL |
+| `OLLAMA_TIMEOUT` | `120` | Request timeout in seconds |
+| `OLLAMA_MODEL` | `gemma3:12b` | Default Ollama model |
+| `AUTO_PULL` | `true` | Auto-pull model if not found locally |
+| `GEMINI_API_KEY` | *(empty)* | Optional Gemini API key |
+
+## Launch
+
+```bash
+streamlit run AURA-ED.py
+```
+
+The app will open at `http://localhost:8501`. Select a patient record and choose a model from the dropdown to generate an Early Risk Profile.
+
+# Evaluation Results
+
+Models were evaluated on 300 held-out patients from the MC-MED test set. Metrics include AUROC, F1, Accuracy, and Outcome Prevalence for each clinical outcome.
+
+## llama3.2
+
+| Outcome | AUROC | F1 | Accuracy | Prevalence |
+|---|---|---|---|---|
+| hospitalization | 0.5661 | 0.3423 | 0.5833 | 0.2333 |
+| critical | 0.6353 | 0.0615 | 0.5933 | 0.0233 |
+| icu_transfer_12h | 0.6353 | 0.0615 | 0.5933 | 0.0233 |
+| sepsis | 0.3729 | 0.0000 | 0.5867 | 0.0033 |
+| aki | 0.8800 | 0.0320 | 0.5967 | 0.0067 |
+| stroke | 0.4734 | 0.0157 | 0.5833 | 0.0133 |
+| ahf | 0.7778 | 0.0476 | 0.6000 | 0.0100 |
+| pe | 0.5432 | 0.0317 | 0.5933 | 0.0100 |
+
+## llama3.2:1b
+
+| Outcome | AUROC | F1 | Accuracy | Prevalence |
+|---|---|---|---|---|
+| hospitalization | 0.5283 | 0.3593 | 0.4596 | 0.2576 |
+| critical | 0.3798 | 0.0492 | 0.4141 | 0.0303 |
+| icu_transfer_12h | 0.3798 | 0.0492 | 0.4141 | 0.0303 |
+| sepsis | 0.8756 | 0.0171 | 0.4912 | 0.0051 |
+| aki | 0.4375 | 0.0169 | 0.4141 | 0.0101 |
+| stroke | 0.7803 | 0.0504 | 0.4293 | 0.1520 |
+| ahf | 0.4375 | 0.0169 | 0.4141 | 0.0101 |
+| pe | 0.5812 | 0.0171 | 0.4193 | 0.0051 |
+
+## llama3.1:8b
+
+| Outcome | AUROC | F1 | Accuracy | Prevalence |
+|---|---|---|---|---|
+| hospitalization | 0.7019 | 0.4000 | 0.7867 | 0.2333 |
+| critical | 0.6902 | 0.1231 | 0.8100 | 0.0233 |
+| icu_transfer_12h | 0.6902 | 0.1231 | 0.8100 | 0.0233 |
+| sepsis | 0.9933 | 0.0339 | 0.8100 | 0.0033 |
+| aki | 0.4765 | 0.0000 | 0.8000 | 0.0067 |
+| stroke | 0.5823 | 0.0323 | 0.8000 | 0.0067 |
+| ahf | 0.8990 | 0.0984 | 0.8167 | 0.0100 |
+| pe | 0.8990 | 0.0984 | 0.8167 | 0.0100 |
+
+## gemma3:12b
+
+| Outcome | AUROC | F1 | Accuracy | Prevalence |
+|---|---|---|---|---|
+| hospitalization | 0.6809 | 0.4912 | 0.6133 | 0.2333 |
+| critical | 0.7087 | 0.0727 | 0.4900 | 0.0233 |
+| icu_transfer_12h | 0.7087 | 0.0727 | 0.4900 | 0.0233 |
+| sepsis | 0.7358 | 0.0126 | 0.4767 | 0.0033 |
+| aki | 0.7366 | 0.0250 | 0.4800 | 0.0067 |
+| stroke | 0.7382 | 0.0494 | 0.4867 | 0.0133 |
+| ahf | 0.7374 | 0.0373 | 0.4833 | 0.0100 |
+| pe | 0.7374 | 0.0373 | 0.4833 | 0.0100 |
 
 # Limitations
 Pilot Sample Size: While the initial plan involved the full 80/20 split, computational constraints (8-hour run times for 300 patients) limited the pilot evaluation to a representative sample of 300 ED encounters.
