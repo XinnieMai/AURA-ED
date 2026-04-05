@@ -1,9 +1,3 @@
----
-noteId: "706af040312a11f1bcd96f93fa44bc36"
-tags: []
-
----
-
 # AURA-ED: AI-powered Utilization & Risk Analysis in the Emergency Department
 
 **Course: DS 5003: Healthcare Data Science**
