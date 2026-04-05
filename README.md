@@ -84,7 +84,8 @@ To generate the Clinical Risk Briefs, the system utilizes a Retrieval-Augmented 
 - The engine integrates triage vitals, high-priority labs (Lactate, Troponin), and validated risk scores (NEWS2, CCI, ECI) into a constrained output schema.
 
 ~~~
-python brief_generator_llama.py --input master_dataset.csv --model llama3.1:8b
+ for model in llama3.2 llama3.2:1b llama3.1:8b gemma3:12b; do python evaluate.py --llm ollama 
+  --model $model --n 300; done
 ~~~
 
 # Evaluation Results
